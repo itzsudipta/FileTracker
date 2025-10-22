@@ -18,3 +18,12 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+
+#.env files
+.env
+.venv
+venv
+ENV/
+env/
+env.bak/
+venv.bak/   
