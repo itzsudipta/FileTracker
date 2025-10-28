@@ -1,6 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String , Text , Integer, DateTime, Boolean, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String , Text , Integer, DateTime, Boolean, ForeignKey , DECIMAL as Decimal
+from sqlalchemy.dialects.postgresql import UUID , ARRAY as Array
+import uuid
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -49,6 +50,28 @@ class organization(Base):
     plan_id=Column(UUID)
     created_at=Column(DateTime, nullable=False, default='now()')
     storage_limit=Column(String, nullable=False) #10GB default limit
+    orginfo = relationship("subscription", back_populates="orgidinfo")
 
 
+#define the plan model
+class plan(Base):
+    __tablename__ = 'plan'
+    plan_id = Column(UUID, primary_key=True, nullable=False,default=uuid.uuid4)
+    planinfo = relationship("subscription", back_populates="planidinfo")
+    plan_name = Column(Text, nullable=False)
+    storage_limit = Column(Integer, nullable=False)
+    api_limit= Column(Integer)
+    price_per_mnth= Column(Decimal(10,2), nullable=False)
+    ai_feature= Column(Array(Text))
 
+#define the subscription model
+class subscription(Base):
+    __tablename__ = 'subscrip'
+    subscrip_id= Column(UUID, primary_key=True, nullable=False,default=uuid.uuid4)
+    org_id= Column(UUID, ForeignKey("org.org_id"), nullable=False)
+    orgidinfo = relationship("organization", back_populates="orginfo")
+    plan_id= Column(UUID, ForeignKey("plan.plan_id"), nullable=False)
+    planidinfo = relationship("plan", back_populates="planinfo")
+    start_date= Column(DateTime, nullable=False, default='now()')
+    end_date= Column(DateTime, nullable=False)
+    status= Column(Text, nullable=False)
