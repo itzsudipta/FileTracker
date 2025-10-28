@@ -1,6 +1,6 @@
 
-from pydantic import BaseModel ,EmailStr
-from typing import Optional
+from pydantic import BaseModel ,EmailStr 
+from typing import Optional,List
 import hashlib,uuid,shutil
 from datetime import datetime
 
@@ -46,3 +46,35 @@ class User(UserBase):
     user_id: uuid.UUID
     class Config:
         orm_mode = True                   
+
+#schema for plan
+class PlanBase(BaseModel):
+    plan_name: str
+    storage_limit: int
+    api_limit: Optional[int] = None
+    price_per_mnth: float
+    ai_feature: Optional[List[str]] = None
+
+class PlanCreate(PlanBase):
+    pass
+
+class Plan(PlanBase):
+    plan_id: uuid.UUID
+    class Config:
+        orm_mode = True
+
+#Schema for subscription
+class SubscriptionBase(BaseModel):
+    org_id: uuid.UUID
+    plan_id: uuid.UUID
+    start_date: datetime
+    end_date: datetime
+    status: str
+
+class SubscriptionCreate(SubscriptionBase):
+    pass
+
+class Subscription(SubscriptionBase):
+    subscrip_id: uuid.UUID
+    class Config:
+        orm_mode = True
