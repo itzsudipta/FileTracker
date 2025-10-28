@@ -1,5 +1,5 @@
 from typing import Union , Annotated
-from fastapi import Depends,FastAPI , File, UploadFile
+from fastapi import Depends,FastAPI , File, UploadFile , Request
 import multipart
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.applications import Starlette
@@ -10,6 +10,10 @@ from sqlalchemy import text
 import hashlib,uuid,shutil
 from models.schema import FileInfoCreate ,UserBase ,FileInfo
 from database_model.database_model import file_info as file_data
+
+import time
+
+
 app = FastAPI()
 
 def get_db():
@@ -18,6 +22,31 @@ def get_db():
           yield db
      finally:
           db.close()
+#adding  middleware for CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+     allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+#adding middleware for database session management
+@app.middleware("http")
+async def db_session_middleware(request, call_next):
+    request.state.db = session()
+    response = await call_next(request)
+    request.state.db.close()
+    return response
+#adding middleware for response time
+@app.middleware("http")
+async def compression_middleware(request : Request, call_next):
+     start_time = time.perf_counter()
+     response = await call_next(request)
+     process_time = time.perf_counter() - start_time
+     response.headers["X-Process-Time"] = str(process_time) 
+    
+     return response
 
 #test database connection with the api route
 @app.get("/DBtest")
@@ -118,3 +147,52 @@ async def get_users_data (user_id:Annotated[uuid.UUID,None],db:Session=Depends(g
           return "no files found"
      else:
           return userinfo
+     
+
+#route for create a new plan
+from models.schema import Plan,PlanCreate
+@app.post("/createplan/",response_model=PlanCreate)
+async def create_plan(db:Session=Depends(get_db)):
+     from database_model.database_model import plan as plan_data
+     new_plan = plan_data(
+          plan_id=uuid.uuid4(),
+          plan_name="Pro Plan",
+          storage_limit=100,
+          api_limit=10000,
+          price_per_mnth=29.99,
+          ai_feature=["Basic AI Integration"]
+     )
+     db.add( new_plan)
+     db.commit()
+     print("Plan created successfully")
+     db.refresh(new_plan)
+     return  new_plan
+
+#route for fetching all  plan data
+@app.get("/getplandata/",response_model=list[Plan])
+async def get_plans_data (db:Session=Depends(get_db)):
+     from database_model.database_model import plan as plan_data
+     planinfo = db.query(plan_data).all()
+     if not planinfo:
+          return "no files found"
+     else:
+          return planinfo
+
+#create subscription route
+from models.schema import SubscriptionBase ,SubscriptionCreate
+@app.post("/createsubscription/",response_model=SubscriptionCreate)
+async def create_subscription(db:Session=Depends(get_db)):
+     from database_model.database_model import subscription as sub_data
+     new_sub = sub_data(
+          subscrip_id=uuid.uuid4(),
+          org_id="3a833e58-514c-4643-bdff-1a3532e2f830",
+          plan_id="8b7ef5d4-4182-4586-a819-596b217acf89",
+          start_date="2024-06-01 00:00:00",
+          end_date="2025-06-01 00:00:00",
+          status="active"
+     )
+     db.add( new_sub)
+     db.commit()
+     print("Subscription created successfully")
+     db.refresh(new_sub)
+     return  new_sub
