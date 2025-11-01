@@ -14,6 +14,9 @@ class file_info(Base):
     __tablename__ = 'file_data'
     
     file_id= Column(UUID, primary_key=True , nullable=False,default=uuid.uuid4)
+    filelog = relationship("activity_log", back_populates="fileid")
+    filemd = relationship("file_metadata", back_populates="filemetadata")
+
     owner_id = Column(UUID,ForeignKey("user_data.user_id"),nullable=False)
     
     fileinfo = relationship("user", back_populates="usernfo")
@@ -40,6 +43,7 @@ class user(Base):
     login_at= Column(DateTime, nullable=False, default='now()')
     is_active= Column(Boolean,nullable=False, default=True)
     usernfo = relationship("file_info", back_populates="fileinfo")
+    userlogdetail = relationship("activity_log", back_populates="userlog")
 
 #Define the organization model
 class organization(Base):
@@ -75,3 +79,28 @@ class subscription(Base):
     start_date= Column(DateTime, nullable=False, default='now()')
     end_date= Column(DateTime, nullable=False)
     status= Column(Text, nullable=False)
+
+#define the actvity log model
+class activity_log(Base):
+    __tablename__ = 'actv_log'
+    log_id = Column(UUID, primary_key=True, nullable=False,default=uuid.uuid4)
+    user_id = Column(UUID, ForeignKey("user_data.user_id"), nullable=False)
+    userlog = relationship("user", back_populates="userlogdetail")
+    file_id = Column(UUID,  ForeignKey("file_data.file_id"),nullable=False)
+    fileid = relationship("file_info",back_populates="filelog")
+    action_log = Column( Text,nullable=False) 
+    log_time = Column(DateTime, nullable=False)
+    ip_add = Column(Text) 
+    descrp = Column(Text)
+
+#define the file metadata
+class file_metadata(Base):
+    __tablename__ = 'file_md'
+     
+    version_id=Column(UUID, primary_key=True , nullable=False,default=uuid.uuid4)
+    file_id=Column(UUID, ForeignKey("file_data.file_id"), nullable=False)
+    filemetadata=relationship("file_info", back_populates="filemd")
+    ver_no =Column(Integer, nullable=False, default=1)
+    storage_path=Column(Text, nullable=False) 
+    created_at =Column(DateTime, nullable=False, default='now()')
+    changelog=Column(Text, nullable=False)
