@@ -196,3 +196,42 @@ async def create_subscription(db:Session=Depends(get_db)):
      print("Subscription created successfully")
      db.refresh(new_sub)
      return  new_sub
+
+#route for create activity log
+from models.schema import ActivityLogBase ,ActivityLogCreate
+@app.post("/createactivitylog/",response_model=ActivityLogCreate)
+async def create_activity_log(db:Session=Depends(get_db)):
+     from database_model.database_model import activity_log as log_data
+     new_log = log_data(
+          log_id=uuid.uuid4(),
+          user_id="d05215f1-63be-49b9-8188-b6bf59e8b540",
+          file_id="09c99e53-af45-4bdd-a90f-9150d9653fe9",
+          action_log="File uploaded successfully",
+          log_time="2024-06-15 10:30:00",
+          ip_add="192.168.1.1",
+          descrp="File uploaded successfully"
+     )
+     db.add( new_log)
+     db.commit()
+     print("Activity log created successfully")
+     db.refresh(new_log)
+     return  new_log
+
+#route for store or create file metadata
+from models.schema import FileMetadataBase ,FileMetadataCreate
+@app.post("/createfilemetadata/",response_model=FileMetadataCreate)
+async def create_file_metadata(db:Session=Depends(get_db)):
+     from database_model.database_model import file_metadata as md_data
+     new_md = md_data(
+          version_id=uuid.uuid4(),
+          file_id="09c99e53-af45-4bdd-a90f-9150d9653fe9",
+          ver_no=1,
+          storage_path="local/v1/file.txt",
+          created_at="2024-06-15 10:30:00",
+          changelog="File uploaded successfully"
+     )
+     db.add( new_md)
+     db.commit()
+     print("File metadata created successfully")
+     db.refresh(new_md)
+     return  new_md 
