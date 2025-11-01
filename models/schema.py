@@ -78,3 +78,36 @@ class Subscription(SubscriptionBase):
     subscrip_id: uuid.UUID
     class Config:
         orm_mode = True
+
+#Schema for activity log
+class ActivityLogBase(BaseModel):
+    user_id: uuid.UUID
+    file_id: uuid.UUID
+    action_log: str
+    log_time: datetime
+    ip_add: Optional[str] = None
+    descrp: Optional[str] = None
+
+class ActivityLogCreate(ActivityLogBase):
+    pass
+
+class ActivityLog(ActivityLogBase):
+    log_id: uuid.UUID
+    class Config:
+        orm_mode = True 
+
+#Schema for file metadata
+class FileMetadataBase(BaseModel):
+    file_id: uuid.UUID
+    ver_no: int
+    storage_path: str
+    created_at: datetime
+    changelog: str
+
+class FileMetadataCreate(FileMetadataBase):
+    pass
+
+class FileMetadata(FileMetadataBase):
+    version_id: uuid.UUID
+    class Config:
+        orm_mode = True
