@@ -111,3 +111,37 @@ class FileMetadata(FileMetadataBase):
     version_id: uuid.UUID
     class Config:
         orm_mode = True
+
+#schema for file analytics
+class FileAnalyticsBase(BaseModel):
+    file_id: uuid.UUID
+    view_count: int
+    download_count: int
+    last_accesed: Optional[datetime] = None
+    unique_users: Optional[int] = None
+
+class FileAnalyticsCreate(FileAnalyticsBase):
+    pass
+
+class FileAnalytics(FileAnalyticsBase):
+    anly_id: uuid.UUID
+    class Config:
+        orm_mode = True
+
+#schema for file access 
+class FileAccessBase(BaseModel):
+    file_id: uuid.UUID
+    access_type: str
+    shared_with: uuid.UUID
+    expiry_date: Optional[datetime] = None
+    max_download: Optional[int] = None
+    pwd_protect: bool
+    access_status: str
+
+class FileAccessCreate(FileAccessBase):
+    pass
+
+class FileAccess(FileAccessBase):
+    acces_id: uuid.UUID
+    class Config:
+        orm_mode = True
