@@ -20,6 +20,8 @@ class file_info(Base):
     owner_id = Column(UUID,ForeignKey("user_data.user_id"),nullable=False)
     
     fileinfo = relationship("user", back_populates="usernfo")
+    fileanalytics = relationship("file_analytics", back_populates="fileAnlyId")
+    fileaccess = relationship("file_access", back_populates="fileaccessid")
     org_id = Column(UUID, nullable=False,default=uuid.uuid4)
     filename = Column(Text, nullable=False)
     storage_path = Column(Text, nullable=False)
@@ -44,6 +46,8 @@ class user(Base):
     is_active= Column(Boolean,nullable=False, default=True)
     usernfo = relationship("file_info", back_populates="fileinfo")
     userlogdetail = relationship("activity_log", back_populates="userlog")
+    useraccess = relationship("file_access", back_populates="shareduser")
+
 
 #Define the organization model
 class organization(Base):
@@ -104,3 +108,30 @@ class file_metadata(Base):
     storage_path=Column(Text, nullable=False) 
     created_at =Column(DateTime, nullable=False, default='now()')
     changelog=Column(Text, nullable=False)
+
+#define file analytics model
+class file_analytics(Base):
+    __tablename__ = 'file_analytics'
+
+    anly_id=Column(UUID, primary_key=True , nullable=False,default=uuid.uuid4)
+    file_id =Column(UUID, ForeignKey("file_data.file_id"), nullable=False)
+    fileAnlyId =relationship("file_info" , back_populates="fileanalytics")
+    view_count=Column(Integer , nullable=False)
+    download_count=Column(Integer , nullable=False)
+    last_accesed=Column(DateTime)
+    unique_users=Column(Integer)
+
+#define file access model
+class file_access(Base):
+    __tablename__ = 'fileAcces'
+    acces_id=Column(UUID, primary_key=True , nullable=False,default=uuid.uuid4)
+    file_id=Column(UUID, ForeignKey("file_data.file_id"), nullable=False)
+    fileaccessid =relationship("file_info" , back_populates="fileaccess")
+    access_type=Column(Text, nullable=False, default='private')
+    shared_with=Column(UUID, ForeignKey("user_data.user_id"), nullable=False)
+    shareduser = relationship("user",back_populates="useraccess")
+    expiry_date=Column(DateTime)
+    max_download=Column(Integer)
+    pwd_protect=Column(Boolean, nullable=False)
+    access_status=Column(Text, nullable=False, default='Active')
+
