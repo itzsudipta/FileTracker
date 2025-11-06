@@ -1,6 +1,6 @@
-# FileStacker - A Modern SaaS Application 
+# FileStacker - A Modern SaaS WebApplication 
 
-A modern cloud storage SaaS platform for managing, sharing, and analyzing files efficiently.
+FileStacker can evolve into a SaaS-based intelligent file management system where users or organizations can sign up, upload, analyze, and manage their files securely via the cloud, without needing any local installation.
 
 ## 🚀 Tech Stack
 
