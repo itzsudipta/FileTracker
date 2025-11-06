@@ -145,3 +145,50 @@ class FileAccess(FileAccessBase):
     acces_id: uuid.UUID
     class Config:
         orm_mode = True
+
+#schema for embedded data indexing
+class EmbeddedDataBase(BaseModel):
+    file_id: uuid.UUID
+    vector_data: dict
+    model_used: str
+    created_at: datetime
+
+class EmbeddedDataCreate(EmbeddedDataBase):
+    pass
+
+class EmbeddedData(EmbeddedDataBase):
+    embed_id: uuid.UUID
+    class Config:
+        orm_mode = True
+
+#schema for notification settings
+class NotificationSettingsBase(BaseModel):  
+    User_id: uuid.UUID
+    notification_type: str
+    Notification_message: str
+    is_read: bool
+    create_at: datetime
+
+class NotificationSettingsCreate(NotificationSettingsBase):
+    pass
+
+class NotificationSettings(NotificationSettingsBase):
+    notification_id: uuid.UUID
+    class Config:
+        orm_mode = True
+
+#schema for webhook logs
+class WebhookLogsBase(BaseModel):
+    org_id: uuid.UUID
+    url: str
+    event_type: str
+    secret_token: str
+    is_active: datetime
+
+class WebhookLogsCreate(WebhookLogsBase):
+    pass
+
+class WebhookLogs(WebhookLogsBase):
+    webhook_id: uuid.UUID
+    class Config:
+        orm_mode = True 
