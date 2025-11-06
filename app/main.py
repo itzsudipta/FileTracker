@@ -14,6 +14,8 @@ from database_model.database_model import file_info as file_data
 import time
 
 
+
+
 app = FastAPI()
 
 def get_db():
@@ -235,3 +237,72 @@ async def create_file_metadata(db:Session=Depends(get_db)):
      print("File metadata created successfully")
      db.refresh(new_md)
      return  new_md 
+
+#route for file analytics
+from models.schema import FileAnalyticsBase ,FileAnalyticsCreate
+@app.post("/createfileanalytics/",response_model=FileAnalyticsCreate)
+async def create_file_analytics(db:Session=Depends(get_db)):
+     from database_model.database_model import file_analytics as anly_data
+     new_anly = anly_data(
+          anly_id=uuid.uuid4(),
+          file_id="09c99e53-af45-4bdd-a90f-9150d9653fe9",
+          view_count=150,
+          download_count=100,
+          last_accesed="2024-06-15 10:30:00",
+          unique_users=1000
+     )
+     db.add( new_anly)
+     db.commit()
+     print("File analytics created successfully")
+     db.refresh(new_anly)
+     return  new_anly
+
+#route for create file access
+from models.schema import FileAccessBase ,FileAccessCreate
+@app.post("/createfileaccess/",response_model=FileAccessCreate)
+async def create_file_access(db:Session=Depends(get_db)):   
+     from database_model.database_model import file_access as access_data
+     new_access = access_data(
+          acces_id=uuid.uuid4(),
+          file_id="09c99e53-af45-4bdd-a90f-9150d9653fe9",
+          access_type="private",
+          shared_with="d05215f1-63be-49b9-8188-b6bf59e8b540",
+          expiry_date="2024-12-31 23:59:59",
+          max_download=5,
+          pwd_protect=True,
+          access_status="Active"
+     )
+     db.add( new_access)
+     db.commit()
+     print("File access created successfully")
+     db.refresh(new_access)
+     return  new_access
+
+#route for create embedded data indexing
+from models.schema import EmbeddedDataBase ,EmbeddedDataCreate
+@app.post("/createembeddeddata/",response_model=EmbeddedDataCreate)
+async def create_embedded_data(db:Session=Depends(get_db)):
+     from database_model.database_model import embedded_data as embed_data
+     new_embed = embed_data(
+          embed_id=uuid.uuid4(),
+          file_id="09c99e53-af45-4bdd-a90f-9150d9653fe9",
+          vector_data={"embedding": [0.1, 0.2, 0.3]},
+          model_used="text-embedding-ada-002",
+          created_at="2024-06-15 10:30:00"
+     )
+     db.add( new_embed)
+     db.commit()
+     print("Embedded data created successfully")
+     db.refresh(new_embed)
+     return  new_embed
+
+
+# ============================================
+# Include API Routers
+# ============================================
+from app.routes import files, auth, user, system
+
+app.include_router(files.router)
+app.include_router(auth.router)
+app.include_router(user.router)
+app.include_router(system.router)
