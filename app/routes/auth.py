@@ -16,6 +16,11 @@ def get_db():
 
 @router.post("/register")
 async def register_user(user_name: str, user_email: str, password: str, db: Session = Depends(get_db)):
+    # Check if user already exists
+    existing_user = db.query(user_data).filter(user_data.user_emain == user_email).first()
+    if existing_user:
+        return {"error": "User already exists"}
+    
     new_user = user_data(
         user_id=uuid.uuid4(),
         org_id="3a833e58-514c-4643-bdff-1a3532e2f830",
@@ -30,7 +35,13 @@ async def register_user(user_name: str, user_email: str, password: str, db: Sess
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return {"message": "User registered successfully", "user_id": new_user.user_id}
+    return {
+        "message": "User registered successfully", 
+        "user_id": str(new_user.user_id),
+        "user_email": new_user.user_emain,
+        "user_name": new_user.user_name,
+        "token": "sample_token_123"
+    }
 
 # 8. POST /api/auth/login - User login
 @router.post("/login")
@@ -38,7 +49,13 @@ async def login_user(user_email: str, password: str, db: Session = Depends(get_d
     user = db.query(user_data).filter(user_data.user_emain == user_email).first()
     if not user or user.u_password != password:
         return {"error": "Invalid credentials"}
-    return {"message": "Login successful", "user_id": user.user_id, "token": "sample_token_123"}
+    return {
+        "message": "Login successful", 
+        "user_id": str(user.user_id), 
+        "user_email": user.user_emain,
+        "user_name": user.user_name,
+        "token": "sample_token_123"
+    }
 
 # 9. POST /api/auth/logout - User logout
 @router.post("/logout")
