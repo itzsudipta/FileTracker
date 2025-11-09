@@ -1,17 +1,69 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
+import { authService } from '../services/authService';
 
 export const Login = ({ onLogin, darkMode }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Simple mock authentication
-        if (email && password) {
-            onLogin({ email, name: email.split('@')[0] });
+        setIsLoading(true);
+        setError('');
+
+        try {
+            if (isSignUp) {
+                // Register new user
+                const response = await authService.register({
+                    user_name: name || email.split('@')[0],
+                    user_email: email,
+                    password: password,
+                });
+
+                if (response && response.error) {
+                    // Backend returned an error
+                    setError(response.error);
+                } else if (response && response.user_id) {
+                    // Session is already stored in cookies by authService
+                    onLogin({
+                        email: response.user_email || email,
+                        name: response.user_name || name || email.split('@')[0],
+                        user_id: response.user_id
+                    });
+                } else {
+                    setError('Registration failed. Please try again.');
+                }
+            } else {
+                // Login existing user
+                const response = await authService.login({
+                    user_email: email,
+                    password: password,
+                });
+
+                if (response && response.error) {
+                    // Backend returned an error
+                    setError(response.error);
+                } else if (response && response.user_id) {
+                    // Session is already stored in cookies by authService
+                    onLogin({
+                        email: response.user_email || email,
+                        name: response.user_name || email.split('@')[0],
+                        user_id: response.user_id
+                    });
+                } else {
+                    setError('Invalid email or password');
+                }
+            }
+        } catch (err) {
+            console.error('Authentication error:', err);
+            setError(isSignUp ? 'Registration failed. Please try again.' : 'Login failed. Please check your credentials.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -35,6 +87,32 @@ export const Login = ({ onLogin, darkMode }) => {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Error Message */}
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Name Field (Sign Up only) */}
+                    {isSignUp && (
+                        <div>
+                            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                Name
+                            </label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className={`w-full px-4 py-3 rounded-lg border ${darkMode
+                                    ? 'bg-slate-800 border-slate-700 text-gray-100 placeholder-gray-500'
+                                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition`}
+                                placeholder="Your Name"
+                            />
+                        </div>
+                    )}
+
                     {/* Email Field */}
                     <div>
                         <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -105,10 +183,20 @@ export const Login = ({ onLogin, darkMode }) => {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        disabled={isLoading}
+                        className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        <LogIn size={20} />
-                        {isSignUp ? 'Sign Up' : 'Log In'}
+                        {isLoading ? (
+                            <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                                {isSignUp ? 'Signing Up...' : 'Logging In...'}
+                            </>
+                        ) : (
+                            <>
+                                    <LogIn size={20} />
+                                    {isSignUp ? 'Sign Up' : 'Log In'}
+                            </>
+                        )}
                     </button>
                 </form>
 
@@ -131,8 +219,8 @@ export const Login = ({ onLogin, darkMode }) => {
                         Demo Credentials:
                     </p>
                     <p className={`text-sm font-mono ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Email: demo@filestacker.com<br />
-                        Password: demo123
+                        Email: abc@zoho.in<br />
+                        Password: password123
                     </p>
                 </div>
             </div>

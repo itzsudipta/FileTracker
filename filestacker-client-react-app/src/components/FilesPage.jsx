@@ -15,8 +15,10 @@ export const FilesPage = ({ files, darkMode }) => {
 
     // Filter and search
     const filteredFiles = files.filter(file => {
-        const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = filterType === 'all' || file.type.includes(filterType);
+        const fileName = file.name || file.filename || '';
+        const fileType = file.type || '';
+        const matchesSearch = fileName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesFilter = filterType === 'all' || fileType.includes(filterType);
         return matchesSearch && matchesFilter;
     });
 
@@ -68,16 +70,18 @@ export const FilesPage = ({ files, darkMode }) => {
                                         {getFileIcon(file.type)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-medium truncate group-hover:text-blue-500 transition-colors">{file.name}</p>
-                                        <p className={`text-xs ${textSecondary}`}>{formatBytes(file.size)}</p>
+                                        <p className="font-medium truncate group-hover:text-blue-500 transition-colors">
+                                            {file.name || file.filename || 'Untitled'}
+                                        </p>
+                                        <p className={`text-xs ${textSecondary}`}>{formatBytes(file.size || 0)}</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className={`flex items-center justify-between text-xs ${textSecondary}`}>
-                                <span>{formatDate(file.uploadDate)}</span>
+                                <span>{formatDate(file.uploadDate || file.uploaded_at)}</span>
                                 <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded">
-                                    {file.tags && file.tags[0] || 'untagged'}
+                                    {(file.tags && file.tags[0]) || 'untagged'}
                                 </span>
                             </div>
                         </div>
