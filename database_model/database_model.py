@@ -1,11 +1,9 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String , Text , JSON,Integer, DateTime, Boolean, ForeignKey , DECIMAL as Decimal
-from sqlalchemy.dialects.postgresql import UUID , ARRAY as Array
+from sqlalchemy import Column, String, Text, JSON, Integer, DateTime, Boolean, ForeignKey, DECIMAL as Decimal
+from sqlalchemy.dialects.postgresql import UUID, ARRAY as Array
 import uuid
 from sqlalchemy.orm import relationship
 from datetime import datetime
-
-import hashlib,uuid,shutil
 
 Base = declarative_base()
 
@@ -38,11 +36,9 @@ class user(Base):
     user_id = Column(UUID, primary_key=True, nullable=False)
     org_id = Column(UUID,nullable=False,default=uuid.uuid4)
     user_name= Column(Text, nullable=False)
-    user_emain= Column(Text, nullable=False)
-    u_password= Column(Text, nullable=False)
+    user_email= Column("user_email", Text, nullable=False)
     u_role= Column(Text, nullable=False, default='admin')
     joined_at= Column(DateTime, nullable=False, default='now()')
-    login_at= Column(DateTime, nullable=False, default='now()')
     is_active= Column(Boolean,nullable=False, default=True)
     usernfo = relationship("file_info", back_populates="fileinfo")
     userlogdetail = relationship("activity_log", back_populates="userlog")
