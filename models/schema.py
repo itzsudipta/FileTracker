@@ -1,7 +1,7 @@
 
-from pydantic import BaseModel ,EmailStr 
-from typing import Optional,List
-import hashlib,uuid,shutil
+from pydantic import BaseModel, EmailStr
+from typing import Optional, List
+import uuid
 from datetime import datetime
 
 #Schema for file info
@@ -30,11 +30,9 @@ class FileInfo(FileInfoBase):
 class UserBase(BaseModel):
     org_id: uuid.UUID
     user_name: str
-    user_emain: EmailStr
-    u_password: str
+    user_email: EmailStr
     u_role: Optional[str] = 'admin'
     joined_at: Optional[datetime] = None
-    login_at: Optional[datetime] = None
     is_active: Optional[bool] = True
 
 # Schema for creating a user
