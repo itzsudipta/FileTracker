@@ -51,20 +51,17 @@ export default function FileModal({ file, onClose }: FileModalProps) {
                     </button>
                 </div>
 
-                {/* Content */}
+              
                 <div className="p-8 flex flex-col items-center text-center">
 
-                    {/* File Icon */}
                     <div className={`w-20 h-20 ${getFileBg()} rounded-2xl flex items-center justify-center mb-6`}>
                         {getFileIcon()}
                     </div>
 
-                    {/* File Name */}
                     <h3 className="text-xl font-bold text-slate-800 mb-6 break-all">
                         {file.filename}
                     </h3>
 
-                    {/* Details Grid */}
                     <div className="w-full space-y-4">
                         <div className="flex items-center justify-between py-3 border-b border-slate-50">
                             <div className="flex items-center gap-2 text-slate-500">
@@ -88,7 +85,6 @@ export default function FileModal({ file, onClose }: FileModalProps) {
                                 <span className="text-sm">Uploaded by</span>
                             </div>
 
-                            {/* ✅ REAL OWNER NAME FROM DB */}
                             <span className="text-sm font-medium text-slate-800">
                                 {file.owner_name}
                             </span>
@@ -97,7 +93,6 @@ export default function FileModal({ file, onClose }: FileModalProps) {
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="p-6 bg-slate-50 border-t border-slate-100">
                     <button
                         onClick={onClose}
