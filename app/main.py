@@ -1,13 +1,12 @@
-from typing import Union , Annotated
-from fastapi import Depends,FastAPI , File, UploadFile , Request
-import multipart
+from typing import Annotated
+import os
+from fastapi import Depends, FastAPI, File, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.applications import Starlette
-from dbConfig.database import SessionLocal as session ,engine
+from dbConfig.database import SessionLocal as session
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-import hashlib,uuid,shutil
+import hashlib, uuid
 from models.schema import FileInfoCreate ,UserBase ,FileInfo
 from database_model.database_model import file_info as file_data
 
@@ -25,9 +24,10 @@ def get_db():
      finally:
           db.close()
 #adding  middleware for CORS
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[frontend_origin],
     allow_credentials=True,
      allow_methods=["*"],
     allow_headers=["*"],
@@ -101,11 +101,9 @@ async def create_user(db:Session=Depends(get_db)):
           user_id=uuid.uuid4(),
           org_id="3a833e58-514c-4643-bdff-1a3532e2f830",
           user_name="Sudipta Sarkar",
-          user_emain="abc@zoho.in",
-          u_password="password123",
+          user_email="abc@zoho.in",
           u_role="admin",
           joined_at="now()",
-          login_at="now()",
           is_active=True
      )
 
