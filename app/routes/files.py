@@ -1,8 +1,7 @@
 import os
 import hashlib
 import uuid
-import httpx
-from urllib.parse import quote
+import boto3
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
 from sqlalchemy.orm import Session
 
@@ -13,12 +12,13 @@ from app.routes.auth import get_current_user
 
 router = APIRouter(prefix="/api/files", tags=["Files"])
 
-SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("VITE_SUPABASE_URL")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-STORAGE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET", "filedata")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+S3_BUCKET = os.getenv("AWS_S3_BUCKET")
 
-if not SUPABASE_URL:
-    raise RuntimeError("SUPABASE_URL must be set.")
+if not S3_BUCKET:
+    raise RuntimeError("AWS_S3_BUCKET must be set.")
 
 
 def get_db():
@@ -29,16 +29,15 @@ def get_db():
         db.close()
 
 
-def _storage_headers():
-    if not SUPABASE_SERVICE_ROLE_KEY:
-        raise HTTPException(status_code=500, detail="SUPABASE_SERVICE_ROLE_KEY is not configured")
-    return {
-        "apikey": SUPABASE_SERVICE_ROLE_KEY,
-        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
-    }
-
-def _encode_storage_path(storage_path: str) -> str:
-    return quote(storage_path, safe="/")
+def _s3_client():
+    if not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
+        raise HTTPException(status_code=500, detail="AWS credentials not configured")
+    return boto3.client(
+        "s3",
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    )
 
 
 def _serialize_file(file: file_data, owner_name: str | None = None) -> dict:
@@ -54,54 +53,27 @@ def _serialize_file(file: file_data, owner_name: str | None = None) -> dict:
 
 
 async def _upload_to_storage(storage_path: str, content: bytes, content_type: str):
-    encoded_path = _encode_storage_path(storage_path)
-    url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{encoded_path}"
-    headers = _storage_headers()
-    headers["Content-Type"] = content_type or "application/octet-stream"
-    async with httpx.AsyncClient() as client:
-        res = await client.post(url, headers=headers, content=content)
-    if res.status_code not in (200, 201):
-        raise HTTPException(status_code=500, detail="Storage upload failed")
+    client = _s3_client()
+    client.put_object(
+        Bucket=S3_BUCKET,
+        Key=storage_path,
+        Body=content,
+        ContentType=content_type or "application/octet-stream",
+    )
 
 
 async def _delete_from_storage(storage_path: str):
-    encoded_path = _encode_storage_path(storage_path)
-    url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{encoded_path}"
-    async with httpx.AsyncClient() as client:
-        res = await client.delete(url, headers=_storage_headers())
-    if res.status_code not in (200, 204):
-        raise HTTPException(status_code=500, detail="Storage delete failed")
+    client = _s3_client()
+    client.delete_object(Bucket=S3_BUCKET, Key=storage_path)
 
 
 async def _create_signed_url(storage_path: str, expires_in: int = 60) -> str:
-    encoded_path = _encode_storage_path(storage_path)
-    url = f"{SUPABASE_URL}/storage/v1/object/sign/{STORAGE_BUCKET}/{encoded_path}"
-    async with httpx.AsyncClient() as client:
-        res = await client.post(url, headers=_storage_headers(), json={"expiresIn": expires_in})
-    if res.status_code != 200:
-        raise HTTPException(status_code=500, detail="Failed to create signed URL")
-    data = res.json()
-    signed_path = data.get("signedURL")
-    if not signed_path:
-        raise HTTPException(status_code=500, detail="Signed URL missing")
-    base = SUPABASE_URL.rstrip("/")
-    if signed_path.startswith("/object/"):
-        signed_path = "/storage/v1" + signed_path
-    return f"{base}{signed_path}"
-
-
-def _normalize_storage_path(storage_path: str) -> str:
-    if not storage_path:
-        return ""
-    path = storage_path.strip()
-    if path.startswith(SUPABASE_URL):
-        parts = path.split("/storage/v1/object/", 1)
-        if len(parts) == 2:
-            path = parts[1]
-    path = path.lstrip("/")
-    if path.startswith(f"{STORAGE_BUCKET}/"):
-        path = path[len(f"{STORAGE_BUCKET}/"):]
-    return path
+    client = _s3_client()
+    return client.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": S3_BUCKET, "Key": storage_path},
+        ExpiresIn=expires_in,
+    )
 
 
 # 1. GET /api/files - Fetch all uploaded files
@@ -144,7 +116,7 @@ async def upload_file_api(
 ):
     content = await file.read()
     checksum = hashlib.md5(content).hexdigest()
-    storage_path = _normalize_storage_path(f"{current_user['org_id']}/{uuid.uuid4()}_{file.filename}")
+    storage_path = f"{current_user['org_id']}/{uuid.uuid4()}_{file.filename}"
 
     await _upload_to_storage(storage_path, content, file.content_type or "application/octet-stream")
 
@@ -173,7 +145,7 @@ async def download_file(file_id: uuid.UUID, db: Session = Depends(get_db), curre
     ).first()
     if not file:
         return {"error": "File not found"}
-    storage_path = _normalize_storage_path(file.storage_path or "")
+    storage_path = (file.storage_path or "").strip()
     if not storage_path or storage_path == "local":
         raise HTTPException(status_code=404, detail="File is not available in storage")
     signed_url = await _create_signed_url(storage_path, 60)
@@ -189,7 +161,7 @@ async def delete_file(file_id: uuid.UUID, db: Session = Depends(get_db), current
     ).first()
     if not file:
         return {"error": "File not found"}
-    storage_path = _normalize_storage_path(file.storage_path or "")
+    storage_path = (file.storage_path or "").strip()
     if storage_path and storage_path != "local":
         await _delete_from_storage(storage_path)
     file.is_deleted = True
