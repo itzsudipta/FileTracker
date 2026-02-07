@@ -215,7 +215,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         try {
             setOpeningFile(file.id);
 
-            const data = await apiFetch<{ signed_url: string }>(`/api/files/${file.id}/download`);
+            const data = await apiFetch<{ signed_url: string }>(`/api/files/${file.id}/open`);
             if (data?.signed_url) {
                 window.open(data.signed_url, '_blank');
             }

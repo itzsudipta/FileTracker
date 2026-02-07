@@ -67,11 +67,16 @@ async def _delete_from_storage(storage_path: str):
     client.delete_object(Bucket=S3_BUCKET, Key=storage_path)
 
 
-async def _create_signed_url(storage_path: str, expires_in: int = 60, filename: str | None = None) -> str:
+async def _create_signed_url(
+    storage_path: str,
+    expires_in: int = 60,
+    filename: str | None = None,
+    disposition: str | None = None,
+) -> str:
     client = _s3_client()
     params = {"Bucket": S3_BUCKET, "Key": storage_path}
-    if filename:
-        params["ResponseContentDisposition"] = f'attachment; filename="{filename}"'
+    if filename and disposition:
+        params["ResponseContentDisposition"] = f'{disposition}; filename="{filename}"'
     return client.generate_presigned_url(
         "get_object",
         Params=params,
@@ -139,7 +144,23 @@ async def upload_file_api(
     return _serialize_file(db_file, current_user.get("user_name"))
 
 
-# 4. GET /api/files/:id/download - Download a file
+# 4. GET /api/files/:id/open - Open a file in browser
+@router.get("/{file_id}/open")
+async def open_file(file_id: uuid.UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    file = db.query(file_data).filter(
+        file_data.file_id == file_id,
+        file_data.org_id == current_user["org_id"]
+    ).first()
+    if not file:
+        return {"error": "File not found"}
+    storage_path = (file.storage_path or "").strip()
+    if not storage_path or storage_path == "local":
+        raise HTTPException(status_code=404, detail="File is not available in storage")
+    signed_url = await _create_signed_url(storage_path, 60, file.filename, "inline")
+    return {"filename": file.filename, "signed_url": signed_url}
+
+
+# 5. GET /api/files/:id/download - Download a file
 @router.get("/{file_id}/download")
 async def download_file(file_id: uuid.UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     file = db.query(file_data).filter(
@@ -151,11 +172,11 @@ async def download_file(file_id: uuid.UUID, db: Session = Depends(get_db), curre
     storage_path = (file.storage_path or "").strip()
     if not storage_path or storage_path == "local":
         raise HTTPException(status_code=404, detail="File is not available in storage")
-    signed_url = await _create_signed_url(storage_path, 60, file.filename)
+    signed_url = await _create_signed_url(storage_path, 60, file.filename, "attachment")
     return {"filename": file.filename, "signed_url": signed_url}
 
 
-# 5. DELETE /api/files/:id - Delete a file
+# 6. DELETE /api/files/:id - Delete a file
 @router.delete("/{file_id}")
 async def delete_file(file_id: uuid.UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     file = db.query(file_data).filter(
@@ -172,7 +193,7 @@ async def delete_file(file_id: uuid.UUID, db: Session = Depends(get_db), current
     return {"message": "File deleted successfully"}
 
 
-# 6. PATCH /api/files/:id/tags - Update file tags/metadata
+# 7. PATCH /api/files/:id/tags - Update file tags/metadata
 @router.patch("/{file_id}/tags")
 async def update_file_tags(file_id: uuid.UUID, filename: str = None, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     file = db.query(file_data).filter(
