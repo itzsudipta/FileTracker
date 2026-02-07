@@ -67,11 +67,14 @@ async def _delete_from_storage(storage_path: str):
     client.delete_object(Bucket=S3_BUCKET, Key=storage_path)
 
 
-async def _create_signed_url(storage_path: str, expires_in: int = 60) -> str:
+async def _create_signed_url(storage_path: str, expires_in: int = 60, filename: str | None = None) -> str:
     client = _s3_client()
+    params = {"Bucket": S3_BUCKET, "Key": storage_path}
+    if filename:
+        params["ResponseContentDisposition"] = f'attachment; filename="{filename}"'
     return client.generate_presigned_url(
         "get_object",
-        Params={"Bucket": S3_BUCKET, "Key": storage_path},
+        Params=params,
         ExpiresIn=expires_in,
     )
 
@@ -148,7 +151,7 @@ async def download_file(file_id: uuid.UUID, db: Session = Depends(get_db), curre
     storage_path = (file.storage_path or "").strip()
     if not storage_path or storage_path == "local":
         raise HTTPException(status_code=404, detail="File is not available in storage")
-    signed_url = await _create_signed_url(storage_path, 60)
+    signed_url = await _create_signed_url(storage_path, 60, file.filename)
     return {"filename": file.filename, "signed_url": signed_url}
 
 
