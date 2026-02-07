@@ -57,7 +57,7 @@ export default function DashboardSidebar({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                             </svg>
                         </div>
-                        <span className="font-bold text-lg lg:text-xl text-slate-800 tracking-tight whitespace-nowrap">FileStacker</span>
+                        <span className="font-bold text-lg lg:text-xl text-slate-800 tracking-tight whitespace-nowrap">FileTracker</span>
                     </div>
 
                     {/* Collapsed logo - Desktop only */}

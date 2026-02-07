@@ -82,7 +82,7 @@ export default function Auth({ onLogin }: AuthProps) {
                                 <FolderOpen className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-semibold text-slate-800">FileStacker</h1>
+                                <h1 className="text-lg font-semibold text-slate-800">FileTracker</h1>
                                 <p className="text-xs text-slate-500">
                                     {isLogin ? 'Sign in to continue' : 'Create your account'}
                                 </p>
