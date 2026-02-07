@@ -241,12 +241,19 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
             const data = await apiFetch<{ signed_url: string; filename: string }>(`/api/files/${file.id}/download`);
             if (data?.signed_url) {
+                const res = await fetch(data.signed_url);
+                if (!res.ok) {
+                    throw new Error('Download failed');
+                }
+                const blob = await res.blob();
+                const objectUrl = URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.href = data.signed_url;
+                link.href = objectUrl;
                 link.download = file.filename;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                URL.revokeObjectURL(objectUrl);
             }
         } catch (error) {
             console.error('Error downloading file:', error);
