@@ -13,8 +13,6 @@ import AppFooter from './AppFooter';
 interface DashboardProps {
     user: UserData;
     onLogout: () => void;
-    darkMode: boolean;
-    toggleTheme: () => void;
 }
 
 // Constants
@@ -39,7 +37,7 @@ const mapFileType = (filename: string, mimeType?: string): string => {
     return 'file';
 };
 
-export default function Dashboard({ user, onLogout, darkMode, toggleTheme }: DashboardProps) {
+export default function Dashboard({ user, onLogout }: DashboardProps) {
     // State management
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

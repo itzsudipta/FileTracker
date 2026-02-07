@@ -1,4 +1,3 @@
-import React from 'react';
 import { Menu } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { UserData } from './Auth';

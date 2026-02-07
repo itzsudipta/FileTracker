@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, FileText, Image, FileSpreadsheet, File, User, Calendar, HardDrive } from 'lucide-react';
 import type { FileData } from './FileList';
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, User, Building, Loader2, ArrowRight, Shield, FolderOpen } from 'lucide-react';
+import { Mail, Lock, User, Building, Loader2, ArrowRight, FolderOpen } from 'lucide-react';
 import { apiFetch } from '../api/client';
 
 export interface UserData {

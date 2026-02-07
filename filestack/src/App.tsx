@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Auth, { type UserData } from './components/Auth';
 import Dashboard from './components/Dashboard'
 import { apiFetch } from './api/client';
@@ -39,8 +39,6 @@ export default function App() {
         <Dashboard
           user={user}
           onLogout={handleLogout}
-          darkMode={darkMode}
-          toggleTheme={() => setDarkMode(!darkMode)}
         />
       )}
     </div>
