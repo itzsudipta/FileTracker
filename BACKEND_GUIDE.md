@@ -23,6 +23,12 @@ sudo systemctl restart filestacker
 sudo systemctl status filestacker
 ```
 
+### Reload service (after config change)
+```bash
+sudo systemctl daemon-reload
+sudo systemctl reload filestacker
+```
+
 ### View recent logs
 ```bash
 sudo journalctl -u filestacker -n 50 --no-pager
