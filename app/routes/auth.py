@@ -113,7 +113,8 @@ def _get_profile(db: Session, email: str):
         user_data.user_id,
         user_data.user_name,
         user_data.org_id,
-        user_data.user_email
+        user_data.user_email,
+        user_data.u_role,
     ).filter(user_data.user_email == email).first()
     if not profile:
         raise HTTPException(status_code=404, detail="User profile not found")
@@ -121,6 +122,8 @@ def _get_profile(db: Session, email: str):
     return {
         "user_id": str(profile.user_id),
         "user_name": profile.user_name,
+        "user_email": profile.user_email,
+        "u_role": profile.u_role,
         "org_id": str(profile.org_id),
         "org_name": org.org_name if org else "Unknown Org",
     }

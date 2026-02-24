@@ -16,6 +16,7 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 S3_BUCKET = os.getenv("AWS_S3_BUCKET")
+MAX_NORMAL_USER_UPLOAD_BYTES = 1 * 1024 * 1024 * 1024
 
 if not S3_BUCKET:
     raise RuntimeError("AWS_S3_BUCKET must be set.")
@@ -84,6 +85,16 @@ async def _create_signed_url(
     )
 
 
+def _try_get_upload_size_bytes(upload_file: UploadFile) -> int | None:
+    try:
+        upload_file.file.seek(0, os.SEEK_END)
+        size = upload_file.file.tell()
+        upload_file.file.seek(0)
+        return size
+    except Exception:
+        return None
+
+
 # 1. GET /api/files - Fetch all uploaded files
 @router.get("")
 async def get_all_files(search: str = None, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
@@ -122,7 +133,21 @@ async def upload_file_api(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    content = await file.read()
+    user_name = (current_user.get("user_name") or "").strip().lower()
+    is_unlimited_user = user_name.startswith("sudipta")
+    size_limit = None if is_unlimited_user else MAX_NORMAL_USER_UPLOAD_BYTES
+    detected_size = _try_get_upload_size_bytes(file)
+
+    if size_limit is not None and detected_size is not None and detected_size > size_limit:
+        raise HTTPException(status_code=413, detail="Normal users can upload files up to 1 GB only.")
+
+    if size_limit is not None and detected_size is None:
+        content = await file.read(size_limit + 1)
+        if len(content) > size_limit:
+            raise HTTPException(status_code=413, detail="Normal users can upload files up to 1 GB only.")
+    else:
+        content = await file.read()
+
     checksum = hashlib.md5(content).hexdigest()
     storage_path = f"{current_user['org_id']}/{uuid.uuid4()}_{file.filename}"
 
