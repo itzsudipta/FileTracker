@@ -9,6 +9,19 @@ interface FileModalProps {
 }
 
 export default function FileModal({ file, onClose }: FileModalProps) {
+    const formatUploadedAt = (dateString: string): string => {
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return dateString;
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+    };
+
     const getFileIcon = () => {
         switch (file.type) {
             case 'image':
@@ -75,7 +88,7 @@ export default function FileModal({ file, onClose }: FileModalProps) {
                                 <Calendar className="w-4 h-4" />
                                 <span className="text-sm">Uploaded</span>
                             </div>
-                            <span className="text-sm font-medium text-slate-800">{file.uploaded_at}</span>
+                            <span className="text-sm font-medium text-slate-800">{formatUploadedAt(file.uploaded_at)}</span>
                         </div>
 
                         <div className="flex items-center justify-between py-3">
