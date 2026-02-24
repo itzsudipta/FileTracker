@@ -3,7 +3,7 @@ import FileList, { type FileData } from './FileList';
 import FileModal from './FileModal';
 import type { UserData } from './Auth';
 import { Loader2 } from 'lucide-react';
-import { apiFetch, apiFetchForm } from '../api/client';
+import { apiFetch, apiUploadFile } from '../api/client';
 import DashboardHeader from './DashboardHeader';
 import DashboardSidebar from './DashboardSidebar';
 import UploadArea from './UploadArea';
@@ -36,6 +36,8 @@ const mapFileType = (filename: string, mimeType?: string): string => {
     if (['doc', 'docx'].includes(fileExt || '')) return 'doc';
     return 'file';
 };
+
+const clampProgress = (value: number): number => Math.min(100, Math.max(0, value));
 
 export default function Dashboard({ user, onLogout }: DashboardProps) {
     // State management
@@ -175,20 +177,33 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
         try {
             const totalFiles = filesToUpload.length;
+            const filesArray = Array.from(filesToUpload);
+            const totalBytes = filesArray.reduce((sum, file) => sum + (file.size || 0), 0);
+            const safeTotalBytes = totalBytes > 0 ? totalBytes : totalFiles;
+            let uploadedBytesSoFar = 0;
 
             for (let i = 0; i < totalFiles; i++) {
-                const file = filesToUpload[i];
-                const progressBase = (i / totalFiles) * 100;
-
-                // Update progress - start
-                setUploadProgress(progressBase + 10);
+                const file = filesArray[i];
+                const fileWeight = totalBytes > 0 ? file.size : 1;
+                let currentFileLoaded = 0;
 
                 const formData = new FormData();
                 formData.append('file', file);
-                await apiFetchForm(`/api/files/upload`, formData);
+                await apiUploadFile(`/api/files/upload`, formData, {
+                    onProgress: (loaded) => {
+                        currentFileLoaded = Math.min(loaded, fileWeight);
+                        const aggregateLoaded = uploadedBytesSoFar + currentFileLoaded;
+                        const percent = (aggregateLoaded / safeTotalBytes) * 100;
+                        setUploadProgress(clampProgress(percent));
+                    }
+                });
 
-                setUploadProgress(progressBase + 100);
+                uploadedBytesSoFar += fileWeight;
+                const percent = (uploadedBytesSoFar / safeTotalBytes) * 100;
+                setUploadProgress(clampProgress(percent));
             }
+
+            setUploadProgress(100);
 
             // Real-time subscription will auto-refresh, but we can force it
             await fetchFiles();
