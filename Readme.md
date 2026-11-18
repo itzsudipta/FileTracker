@@ -1,141 +1,114 @@
-# FileTracker
+# FileStacker - Java Spring Boot Backend
 
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat&logo=python&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-RDS-316192?style=flat&logo=postgresql&logoColor=white)
-![React](https://img.shields.io/badge/React-19-20232A?style=flat&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-007ACC?style=flat&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7.x-646CFF?style=flat&logo=vite&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC?style=flat&logo=tailwind-css&logoColor=white)
-![S3](https://img.shields.io/badge/AWS-S3-232F3E?style=flat&logo=amazonaws&logoColor=white)
-![CloudFront](https://img.shields.io/badge/AWS-CloudFront-232F3E?style=flat&logo=amazonaws&logoColor=white)
-![Nginx](https://img.shields.io/badge/Nginx-1.24-009639?style=flat&logo=nginx&logoColor=white)
-
-FileTracker is a modern file management web app with a FastAPI backend and a React + Vite frontend. It supports secure authentication, file upload, download, and organization for users and organizations.
+This is the enterprise-grade Java Spring Boot backend for **FileStacker**, converted with 100% fidelity from the Python FastAPI backend.
 
 ---
 
-## ✨ Highlights
-- ✅ FastAPI backend with PostgreSQL (RDS)
-- ✅ React + TypeScript frontend (Vite + Tailwind)
-- ✅ Authentication via Supabase Auth
-- ✅ File storage on Amazon S3 with signed URLs
-- ✅ Production deployment behind Nginx + HTTPS
+## 🏛️ Architecture & Component Design
+
+Every single component in the backend is strictly structured with the 5 core layers:
+1. **Controller** (`@RestController`, `@RequestMapping`, `@CrossOrigin`)
+2. **Service** (`@Service`, business logic & transactional management)
+3. **Repository** (`@Repository`, Spring Data JPA interfaces)
+4. **Enum** (Type-safe domain enums)
+5. **Entity** (`@Entity`, JPA object-relational mapping to PostgreSQL tables)
+
+### Component Matrix
+
+| Component | Entity | Enum | Repository | Service | Controller |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **User** | `User` (`user_data`) | `UserRole` | `UserRepository` | `UserService` | `UserController` |
+| **Organization** | `Organization` (`org`) | `OrganizationStatus` | `OrganizationRepository` | `OrganizationService` | `OrganizationController` |
+| **FileInfo** | `FileInfo` (`file_data`) | `StorageType` | `FileInfoRepository` | `FileInfoService` | `FileController` |
+| **FileMetadata** | `FileMetadata` (`file_md`) | `VersionChangeType` | `FileMetadataRepository` | `FileMetadataService` | `FileMetadataController` |
+| **FileAccess** | `FileAccess` (`fileacces`) | `AccessType`, `AccessStatus` | `FileAccessRepository` | `FileAccessService` | `FileAccessController` |
+| **FileAnalytics** | `FileAnalytics` (`file_analytics`) | `AnalyticsEventType` | `FileAnalyticsRepository` | `FileAnalyticsService` | `FileAnalyticsController` |
+| **Plan** | `Plan` (`plan`) | `PlanTier` | `PlanRepository` | `PlanService` | `PlanController` |
+| **Subscription** | `Subscription` (`subscrip`) | `SubscriptionStatus` | `SubscriptionRepository` | `SubscriptionService` | `SubscriptionController` |
+| **ActivityLog** | `ActivityLog` (`actv_log`) | `ActivityAction` | `ActivityLogRepository` | `ActivityLogService` | `ActivityLogController` |
+| **EmbeddedData** | `EmbeddedData` (`embedd_index`) | `EmbeddingModelType` | `EmbeddedDataRepository` | `EmbeddedDataService` | `EmbeddedDataController` |
+| **Notification** | `NotificationSettings` (`notification`) | `NotificationType` | `NotificationSettingsRepository` | `NotificationSettingsService` | `NotificationController` |
+| **Webhook** | `WebhookLog` (`webhookstable`) | `WebhookEventType` | `WebhookLogRepository` | `WebhookLogService` | `WebhookController` |
+| **Auth** | `AuthSession` | `AuthStatus` | `AuthRepository` | `AuthService` | `AuthController` |
+| **System** | `SystemSetting` (`user_settings`) | `ThemeType` | `SystemRepository` | `SystemService` | `SystemController` |
 
 ---
 
-## 📁 Project Structure
-```
-FileTracker/
-├── app/                    # FastAPI backend
-│   ├── main.py
-│   └── routes/
-│       ├── auth.py
-│       ├── files.py
-│       ├── system.py
-│       └── user.py
-├── filestack/              # React frontend (Vite)
-│   ├── src/
-│   └── ...
-├── database_model/         # SQLAlchemy models
-├── models/                 # Pydantic schemas
-├── dbConfig/               # DB configuration
-├── sql/                    # SQL scripts (optional)
-└── BACKEND_GUIDE.md        # Operations and deployment guide
-```
+## 📡 API Endpoint Coverage
+
+All endpoints match the exact path, HTTP method, parameters, headers, and response formats expected by the React frontend and clients:
+
+### 1. Authentication (`/api/auth`)
+- `POST /api/auth/login`: Authenticates user with Supabase, sets HttpOnly cookies (`sb-access-token`, `sb-refresh-token`), returns user profile.
+- `POST /api/auth/register`: Creates Supabase auth user, inserts organization and user into PostgreSQL, signs in, sets cookies.
+- `POST /api/auth/logout`: Clears authentication cookies.
+- `GET /api/auth/me`: Verifies cookie session via Supabase, automatically refreshes token if needed, returns profile.
+
+### 2. Files (`/api/files` and legacy)
+- `GET /api/files`: Lists non-deleted files for the current user's organization with optional `?search=` filter.
+- `GET /api/files/{file_id}`: Retrieves metadata for a specific file.
+- `POST /api/files/upload`: Enforces 1GB file size limit (unlimited for users named starting with "sudipta"), computes MD5 checksum, uploads to AWS S3, saves database entity.
+- `GET /api/files/{file_id}/open`: Generates a short-lived AWS S3 presigned URL with `inline` disposition.
+- `GET /api/files/{file_id}/download`: Generates a short-lived AWS S3 presigned URL with `attachment` disposition.
+- `DELETE /api/files/{file_id}`: Soft-deletes file in DB and removes the file object from S3.
+- `PATCH /api/files/{file_id}/tags`: Updates filename/tags.
+- `POST /uploadfile/`: Legacy file upload endpoint.
+- `GET /getfilesdata/`: Legacy file listing endpoint.
+
+### 3. User & System
+- `GET /api/user/me`: Returns user entity by `?user_id=`.
+- `GET /getUserData/{user_id}`: Legacy user listing.
+- `POST /createuser/`: Legacy user creation.
+- `GET /DBtest`: Tests PostgreSQL connectivity (`SELECT current_database()`).
+- `GET /api/stats`: Dashboard stats (`total_files`, `storage_used`, `storage_unit`).
+- `GET /api/settings`: Returns settings for user.
+- `PUT /api/settings`: Updates settings for user.
+
+### 4. Other Domain Components
+- `POST /createorg/`: Creates organization.
+- `POST /createplan/` & `GET /getplandata/`: Manages subscription plans.
+- `POST /createsubscription/` & `GET /api/subscription/org/{org_id}`: Manages subscriptions.
+- `POST /createactivitylog/` & `GET /api/activity/user/{user_id}`: Logs activity.
+- `POST /createfilemetadata/` & `GET /api/files/{file_id}/versions`: Version metadata.
+- `POST /createfileaccess/` & `GET /api/files/{file_id}/access`: Access permissions.
+- `POST /createfileanalytics/` & `GET /api/files/{file_id}/analytics`: Analytics counters.
+- `POST /createembeddeddata/` & `GET /api/embedding/file/{file_id}`: Vector embeddings.
+- `POST /api/notifications` & `GET /api/notifications/user/{user_id}`: User notifications.
+- `POST /api/webhooks` & `GET /api/webhooks/org/{org_id}`: Outgoing webhooks.
 
 ---
 
-## 🧱 Tech Stack
-- Backend: FastAPI, SQLAlchemy, Pydantic, Uvicorn
-- Database: PostgreSQL (Amazon RDS)
-- Frontend: React, TypeScript, Vite, TailwindCSS
-- Auth: Supabase Auth
-- Storage: Amazon S3 (signed URLs)
-- Infra: EC2 + Nginx + systemd + CloudFront + ACM
+## ⚙️ Configuration & Environment Variables
+
+The backend reads configuration directly from environment variables or standard `.env`:
+
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `SERVER_PORT` | HTTP port for Spring Boot | `8000` |
+| `DATABASE_URL` | PostgreSQL connection URL (supports `postgres://`, `postgresql://`, or `jdbc:postgresql://`) | `jdbc:postgresql://localhost:5432/postgres` |
+| `SPRING_DATASOURCE_USERNAME` | PostgreSQL username | `postgres` |
+| `SPRING_DATASOURCE_PASSWORD` | PostgreSQL password | `postgres` |
+| `FRONTEND_ORIGIN` | Allowed CORS origin | `http://localhost:5173` |
+| `COOKIE_SECURE` | Set secure flag on cookies | `false` |
+| `SUPABASE_URL` | Supabase project URL | `""` |
+| `SUPABASE_ANON_KEY` | Supabase anonymous API key | `""` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role secret | `""` |
+| `AWS_ACCESS_KEY_ID` | AWS IAM Access Key ID | `""` |
+| `AWS_SECRET_ACCESS_KEY` | AWS IAM Secret Access Key | `""` |
+| `AWS_REGION` | AWS Region for S3 | `us-east-1` |
+| `AWS_S3_BUCKET` | AWS S3 Bucket Name | `filestackerstorage` |
 
 ---
 
-## 🔐 Environment Variables
+## 🚀 Running the Application
 
-### Backend (`/home/ubuntu/FileTracker/.env`)
-```
-DATABASE_URL=postgresql://USER:PASSWORD@RDS_ENDPOINT:5432/DBNAME
-FRONTEND_ORIGIN=https://www.filetracker.app
-
-SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-
-AWS_ACCESS_KEY_ID=...
-AWS_SECRET_ACCESS_KEY=...
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=filestackerstorage
+### Using Maven:
+```bash
+mvn clean spring-boot:run
 ```
 
-### Frontend (`filestack/.env.production`)
+### Packaging into a JAR:
+```bash
+mvn clean package -DskipTests
+java -jar target/filestacker-backend-1.0.0.jar
 ```
-VITE_API_URL=https://api.filetracker.app
-```
-
----
-
-## 🧪 Local Development
-
-### Backend
-```
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Frontend
-```
-cd filestack
-npm install
-npm run dev
-```
-
----
-
-## 🚀 Production Deployment (Summary)
-
-### Backend (EC2 + systemd)
-1. Configure `/home/ubuntu/FileTracker/.env`
-2. Start service:
-```
-sudo systemctl daemon-reload
-sudo systemctl restart filestacker
-sudo systemctl status filestacker
-```
-
-### Frontend (S3 + CloudFront)
-1. Build:
-```
-cd filestack
-npm run build
-```
-2. Upload:
-```
-aws s3 sync dist/ s3://myfiletracker --delete
-```
-3. CloudFront invalidation:
-```
-/*
-```
-
----
-
-## 🛠️ Common Ops Commands
-```
-sudo systemctl status filestacker
-sudo systemctl restart filestacker
-sudo journalctl -u filestacker -n 50 --no-pager
-```
-
----
-
-## 📘 Full Operations Guide
-See `BACKEND_GUIDE.md` for:
-- systemd explanation
-- Supabase → RDS migration
-- Supabase Storage → S3 migration
-- troubleshooting

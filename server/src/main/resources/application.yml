@@ -1,0 +1,48 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: filestacker
+  config:
+    import: optional:file:../.env[.properties]
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      pool-name: FileStackerHikariPool
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: ${HIBERNATE_DDL_AUTO:update}
+    show-sql: false
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 2GB
+      max-request-size: 2GB
+
+app:
+  cors:
+    allowed-origins: ${FRONTEND_ORIGIN:http://localhost:5173}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+  supabase:
+    url: ${SUPABASE_URL}
+    anon-key: ${SUPABASE_ANON_KEY}
+    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+  aws:
+    access-key-id: ${AWS_ACCESS_KEY_ID:}
+    secret-access-key: ${AWS_SECRET_ACCESS_KEY:}
+    region: ${AWS_REGION:us-east-1}
+    s3-bucket: ${AWS_S3_BUCKET:filestackerstorage}
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%clr(%d{HH:mm:ss}){faint} %clr(%-5level) %clr(%logger{20}){cyan} : %msg%n%wEx{short}"
