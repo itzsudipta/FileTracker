@@ -34,9 +34,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "24.x"
+          check-latest: true
           cache: npm
-          cache-dependency-path: 'client/package-lock.json'
+          cache-dependency-path: client/package-lock.json
 
       # 3. Install dependencies using package-lock.json.
       - name: Install dependencies
