@@ -60,15 +60,13 @@ jobs:
         with:
           role-to-assume: ${{secrets.AWS_ROLE_ARN}}
           aws-region: ${{env.AWS_REGION}}
-      
-      - name: Check AWS connection
-        run: aws sts get-caller-identity
 
       # 7. Upload the build and remove obsolete destination files.
       - name: Sync to S3
         env:
           S3_BUCKET_NAME: ${{secrets.S3_BUCKET_NAME}}
         run: |
+          S3_BUCKET_NAME="$(printf '%s' "$S3_BUCKET_NAME" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
           aws s3 sync "$BUILD_DIR/" "s3://$S3_BUCKET_NAME/" --delete
 
       # 8. Request removal of cached website files.
