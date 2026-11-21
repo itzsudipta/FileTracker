@@ -1,17 +1,19 @@
-import { Layers } from 'lucide-react';
-
-export function FileStackerIcon() {
+export function FileStackerIcon({ alt = 'FileStacker logo' }: { alt?: string }) {
     return (
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-blue-600 text-white" aria-hidden="true">
-            <Layers className="size-5" />
-        </span>
+        <img
+            src={`${import.meta.env.BASE_URL}FileStacker.png`}
+            alt={alt}
+            width={54}
+            height={36}
+            className="h-9 w-[54px] shrink-0 rounded-md object-contain"
+        />
     );
 }
 
 export default function FileStackerBrand() {
     return (
         <div className="flex items-center gap-2.5">
-            <FileStackerIcon />
+            <FileStackerIcon alt="" />
             <span className="text-base font-semibold tracking-tight text-slate-900">FileStacker</span>
         </div>
     );

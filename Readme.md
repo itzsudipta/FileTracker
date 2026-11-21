@@ -1,6 +1,24 @@
-# FileStacker - Java Spring Boot Backend
+<h1 align="center">
+  <img src="./client/public/FileStacker.png" alt="FileStacker logo" width="180"><br>
+  FileStacker
+</h1>
 
-This is the enterprise-grade Java Spring Boot backend for **FileStacker**, converted with 100% fidelity from the Python FastAPI backend.
+FileStacker is a web-based file management application for teams. It gives each organization a dashboard where members can upload, search, preview, download, and manage their files.
+
+## Tech Stack
+
+| Icon | Technology | Area | Role in FileStacker |
+| :---: | :--- | :--- | :--- |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/react/react-original.svg" width="24" alt=""> | **React 19** | Frontend | Renders the file dashboard and sign-in screens. |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/typescript/typescript-original.svg" width="24" alt=""> | **TypeScript 5.9** | Frontend | Types UI components and API responses. |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/vitejs/vitejs-original.svg" width="24" alt=""> | **Vite 7** | Frontend tooling | Runs the frontend development server and builds production assets. |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/tailwindcss/tailwindcss-original.svg" width="24" alt=""> | **Tailwind CSS 4** | Frontend styling | Styles the dashboard and authentication screens. |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/java/java-original.svg" width="24" alt=""> | **Java 21** | Backend | Runs the backend application. |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/spring/spring-original.svg" width="24" alt=""> | **Spring Boot 3.3** | Backend | Provides the REST API and integrates with PostgreSQL through Spring Data JPA. |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/postgresql/postgresql-original.svg" width="24" alt=""> | **PostgreSQL** | Database | Stores file metadata, users, organizations, and application records. |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/supabase/supabase-original.svg" width="24" alt=""> | **Supabase Auth** | Authentication | Handles user registration, sign-in, and session refresh. |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" width="24" alt=""> | **Amazon S3** | Object storage | Stores uploaded files and serves them through short-lived presigned URLs. |
+| <img src="https://raw.githubusercontent.com/devicons/devicon/v2.17.0/icons/maven/maven-original.svg" width="24" alt=""> | **Apache Maven** | Backend tooling | Manages Java dependencies and packages the backend. |
 
 ---
 
@@ -34,47 +52,7 @@ Every single component in the backend is strictly structured with the 5 core lay
 
 ---
 
-## 📡 API Endpoint Coverage
-
-All endpoints match the exact path, HTTP method, parameters, headers, and response formats expected by the React frontend and clients:
-
-### 1. Authentication (`/api/auth`)
-- `POST /api/auth/login`: Authenticates user with Supabase, sets HttpOnly cookies (`sb-access-token`, `sb-refresh-token`), returns user profile.
-- `POST /api/auth/register`: Creates Supabase auth user, inserts organization and user into PostgreSQL, signs in, sets cookies.
-- `POST /api/auth/logout`: Clears authentication cookies.
-- `GET /api/auth/me`: Verifies cookie session via Supabase, automatically refreshes token if needed, returns profile.
-
-### 2. Files (`/api/files` and legacy)
-- `GET /api/files`: Lists non-deleted files for the current user's organization with optional `?search=` filter.
-- `GET /api/files/{file_id}`: Retrieves metadata for a specific file.
-- `POST /api/files/upload`: Enforces 1GB file size limit (unlimited for users named starting with "sudipta"), computes MD5 checksum, uploads to AWS S3, saves database entity.
-- `GET /api/files/{file_id}/open`: Generates a short-lived AWS S3 presigned URL with `inline` disposition.
-- `GET /api/files/{file_id}/download`: Generates a short-lived AWS S3 presigned URL with `attachment` disposition.
-- `DELETE /api/files/{file_id}`: Soft-deletes file in DB and removes the file object from S3.
-- `PATCH /api/files/{file_id}/tags`: Updates filename/tags.
-- `POST /uploadfile/`: Legacy file upload endpoint.
-- `GET /getfilesdata/`: Legacy file listing endpoint.
-
-### 3. User & System
-- `GET /api/user/me`: Returns user entity by `?user_id=`.
-- `GET /getUserData/{user_id}`: Legacy user listing.
-- `POST /createuser/`: Legacy user creation.
-- `GET /DBtest`: Tests PostgreSQL connectivity (`SELECT current_database()`).
-- `GET /api/stats`: Dashboard stats (`total_files`, `storage_used`, `storage_unit`).
-- `GET /api/settings`: Returns settings for user.
-- `PUT /api/settings`: Updates settings for user.
-
-### 4. Other Domain Components
-- `POST /createorg/`: Creates organization.
-- `POST /createplan/` & `GET /getplandata/`: Manages subscription plans.
-- `POST /createsubscription/` & `GET /api/subscription/org/{org_id}`: Manages subscriptions.
-- `POST /createactivitylog/` & `GET /api/activity/user/{user_id}`: Logs activity.
-- `POST /createfilemetadata/` & `GET /api/files/{file_id}/versions`: Version metadata.
-- `POST /createfileaccess/` & `GET /api/files/{file_id}/access`: Access permissions.
-- `POST /createfileanalytics/` & `GET /api/files/{file_id}/analytics`: Analytics counters.
-- `POST /createembeddeddata/` & `GET /api/embedding/file/{file_id}`: Vector embeddings.
-- `POST /api/notifications` & `GET /api/notifications/user/{user_id}`: User notifications.
-- `POST /api/webhooks` & `GET /api/webhooks/org/{org_id}`: Outgoing webhooks.
+See the [FileStacker API reference](API_DOCS.md) for routes, request parameters, and response examples.
 
 ---
 
@@ -84,7 +62,7 @@ The backend reads configuration directly from environment variables or standard 
 
 | Variable | Description | Default |
 | :--- | :--- | :--- |
-| `SERVER_PORT` | HTTP port for Spring Boot | `8000` |
+| `SERVER_PORT` | HTTP port for Spring Boot | `8080` |
 | `DATABASE_URL` | PostgreSQL connection URL (supports `postgres://`, `postgresql://`, or `jdbc:postgresql://`) | `jdbc:postgresql://localhost:5432/postgres` |
 | `SPRING_DATASOURCE_USERNAME` | PostgreSQL username | `postgres` |
 | `SPRING_DATASOURCE_PASSWORD` | PostgreSQL password | `postgres` |

@@ -36,10 +36,10 @@ app:
     anon-key: ${SUPABASE_ANON_KEY}
     service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
   aws:
-    access-key-id: ${AWS_ACCESS_KEY_ID:}
-    secret-access-key: ${AWS_SECRET_ACCESS_KEY:}
-    region: ${AWS_REGION:us-east-1}
-    s3-bucket: ${AWS_S3_BUCKET:filestackerstorage}
+    access-key-id: "${AWS_ACCESS_KEY_ID:}"
+    secret-access-key: "${AWS_SECRET_ACCESS_KEY:}"
+    region: "${AWS_REGION:us-east-1}"
+    s3-bucket: "${AWS_S3_BUCKET:filestackerstorage}"
 
 logging:
   level:
