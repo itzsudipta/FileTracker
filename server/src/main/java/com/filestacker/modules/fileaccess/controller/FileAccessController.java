@@ -19,12 +19,12 @@ public class FileAccessController {
     }
 
     // Matches POST /createfileaccess/
-    @PostMapping("/createfileaccess/")
-    public ResponseEntity<FileAccess> createFileAccess() {
-        FileAccess access = fileAccessService.createSampleFileAccess();
-        System.out.println("File access created successfully");
-        return ResponseEntity.ok(access);
-    }
+//    @PostMapping("/createfileaccess/")
+//    public ResponseEntity<FileAccess> createFileAccess() {
+//        FileAccess access = fileAccessService.createSampleFileAccess();
+//        System.out.println("File access created successfully");
+//        return ResponseEntity.ok(access);
+//    }
 
     @GetMapping("/api/files/{file_id}/access")
     public ResponseEntity<List<FileAccess>> getFileAccess(@PathVariable("file_id") UUID fileId) {

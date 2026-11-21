@@ -6,6 +6,7 @@ import com.filestacker.modules.file.dto.SignedUrlResponse;
 import com.filestacker.modules.file.entity.FileInfo;
 import com.filestacker.modules.file.repository.FileInfoRepository;
 import com.filestacker.modules.user.entity.User;
+import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -93,6 +94,7 @@ public class FileInfoService {
     public FileResponse uploadFile(MultipartFile file, User currentUser) {
         String userName = currentUser.getUserName() != null ? currentUser.getUserName().trim().toLowerCase() : "";
         boolean isUnlimitedUser = userName.startsWith("sudipta");
+        if(file.getOriginalFilename().length() > 50) throw new AppException(HttpStatus.BAD_REQUEST, "File name too long");
         long fileSize = file.getSize();
 
         if (!isUnlimitedUser && fileSize > MAX_NORMAL_USER_UPLOAD_BYTES) {

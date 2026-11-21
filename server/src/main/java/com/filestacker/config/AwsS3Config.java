@@ -20,7 +20,7 @@ public class AwsS3Config {
     @Value("${app.aws.secret-access-key:}")
     private String secretAccessKey;
 
-    @Value("${app.aws.region:us-east-1}")
+    @Value("${app.aws.region:ap-south-2}")
     private String region;
 
     @Bean
@@ -35,7 +35,7 @@ public class AwsS3Config {
     @Bean
     public S3Client s3Client(AwsCredentialsProvider credentialsProvider) {
         return S3Client.builder()
-                .region(Region.of(region != null && !region.trim().isEmpty() ? region.trim() : "us-east-1"))
+                .region(Region.of(region != null && !region.trim().isEmpty() ? region.trim() : "ap-south-2"))
                 .credentialsProvider(credentialsProvider)
                 .build();
     }
@@ -43,7 +43,7 @@ public class AwsS3Config {
     @Bean
     public S3Presigner s3Presigner(AwsCredentialsProvider credentialsProvider) {
         return S3Presigner.builder()
-                .region(Region.of(region != null && !region.trim().isEmpty() ? region.trim() : "us-east-1"))
+                .region(Region.of(region != null && !region.trim().isEmpty() ? region.trim() : "ap-south-2"))
                 .credentialsProvider(credentialsProvider)
                 .build();
     }

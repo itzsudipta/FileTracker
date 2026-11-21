@@ -34,17 +34,4 @@ public class FileAccessService {
         return fileAccessRepository.save(fileAccess);
     }
 
-    @Transactional
-    public FileAccess createSampleFileAccess() {
-        FileAccess newAccess = new FileAccess();
-        newAccess.setAccesId(UUID.randomUUID());
-        newAccess.setFileId(UUID.fromString("09c99e53-af45-4bdd-a90f-9150d9653fe9"));
-        newAccess.setAccessType("private");
-        newAccess.setSharedWith(UUID.fromString("d05215f1-63be-49b9-8188-b6bf59e8b540"));
-        newAccess.setExpiryDate(LocalDateTime.parse("2024-12-31T23:59:59"));
-        newAccess.setMaxDownload(5);
-        newAccess.setPwdProtect(true);
-        newAccess.setAccessStatus("Active");
-        return fileAccessRepository.save(newAccess);
-    }
 }

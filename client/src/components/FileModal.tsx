@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import {
     X,
     FileText,
@@ -7,12 +7,6 @@ import {
     File,
     FileCode,
     FileArchive,
-    User,
-    Calendar,
-    HardDrive,
-    ExternalLink,
-    Download,
-    Trash2,
     Copy,
     Check
 } from 'lucide-react';
@@ -52,6 +46,7 @@ const getFileIconConfig = (filename: string, type: string) => {
 };
 
 export default function FileModal({ file, onClose, onOpen, onDownload, onDelete }: FileModalProps) {
+    const titleId = useId();
     const [copied, setCopied] = useState(false);
     const { Icon, color, bg } = getFileIconConfig(file.filename, file.type);
 
@@ -75,103 +70,77 @@ export default function FileModal({ file, onClose, onOpen, onDownload, onDelete 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-xs p-4">
-            <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                    <h2 className="text-sm font-semibold text-slate-900">File Details</h2>
+            <div
+                role="dialog"
+                aria-labelledby={titleId}
+                className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:p-5"
+            >
+                <div className="flex items-start gap-3">
+                    <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${bg}`}>
+                        <Icon className={`size-5 ${color}`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <h2 id={titleId} className="wrap-anywhere text-sm font-semibold text-slate-900">
+                            {file.filename}
+                        </h2>
+                        <p className="mt-0.5 text-xs text-slate-500">{file.size}</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleCopyName}
+                        aria-label={copied ? 'Filename copied' : 'Copy filename'}
+                        title={copied ? 'Filename copied' : 'Copy filename'}
+                        className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    >
+                        {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+                    </button>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                        aria-label="Close file details"
+                        className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                     >
-                        <X className="w-4 h-4" />
+                        <X className="size-4" />
                     </button>
                 </div>
 
-                {/* Content */}
-                <div className="p-4 sm:p-6">
-                    {/* File Header Card */}
-                    <div className="flex items-center gap-4 p-3.5 bg-slate-50 rounded-xl border border-slate-100 mb-5">
-                        <div className={`w-12 h-12 ${bg} rounded-xl flex items-center justify-center shrink-0`}>
-                            <Icon className={`w-6 h-6 ${color}`} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <h3 className="font-semibold text-sm text-slate-900 truncate" title={file.filename}>
-                                {file.filename}
-                            </h3>
-                            <p className="text-xs text-slate-500 mt-0.5">{file.size}</p>
-                        </div>
+                <dl className="mt-5 space-y-2 text-xs">
+                    <div className="flex justify-between gap-3">
+                        <dt className="shrink-0 text-slate-500">Uploaded</dt>
+                        <dd className="text-right text-slate-800">{formatUploadedAt(file.uploaded_at)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                        <dt className="shrink-0 text-slate-500">Uploaded by</dt>
+                        <dd className="min-w-0 wrap-anywhere text-right text-slate-800">{file.owner_name}</dd>
+                    </div>
+                </dl>
+
+                <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+                    {onOpen && (
                         <button
                             type="button"
-                            onClick={handleCopyName}
-                            title="Copy filename"
-                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer shrink-0"
+                            onClick={() => { onOpen(file); onClose(); }}
+                            className="flex-1 cursor-pointer rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
                         >
-                            {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                            Preview
                         </button>
-                    </div>
-
-                    {/* Metadata Items */}
-                    <div className="space-y-3 text-xs">
-                        <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                            <span className="flex items-center gap-2 text-slate-500">
-                                <HardDrive className="w-3.5 h-3.5" /> Size
-                            </span>
-                            <span className="font-medium text-slate-800">{file.size}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                            <span className="flex items-center gap-2 text-slate-500">
-                                <Calendar className="w-3.5 h-3.5" /> Uploaded
-                            </span>
-                            <span className="font-medium text-slate-800">{formatUploadedAt(file.uploaded_at)}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-3 border-b border-slate-100 py-2">
-                            <span className="flex shrink-0 items-center gap-2 text-slate-500">
-                                <User className="w-3.5 h-3.5" /> Uploaded by
-                            </span>
-                            <span className="min-w-0 wrap-anywhere text-right font-medium text-slate-800">{file.owner_name}</span>
-                        </div>
-
-                        {file.storage_path && (
-                            <div className="flex items-center justify-between gap-3 py-2">
-                                <span className="shrink-0 text-slate-500">Storage Key</span>
-                                <span className="min-w-0 max-w-[200px] truncate font-mono text-[11px] text-slate-600" title={file.storage_path}>
-                                    {file.storage_path}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="mt-6 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2.5">
+                    )}
+                    {onDownload && (
                         <button
                             type="button"
-                            onClick={() => { onOpen?.(file); onClose(); }}
-                            className="flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
+                            onClick={() => { onDownload(file); onClose(); }}
+                            className="flex-1 cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-200"
                         >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Preview</span>
+                            Download
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => { onDownload?.(file); onClose(); }}
-                            className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                        >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Download</span>
-                        </button>
-                    </div>
-
+                    )}
                     {onDelete && (
                         <button
                             type="button"
                             onClick={() => { onDelete(file); onClose(); }}
-                            className="w-full mt-2 py-2 text-red-600 hover:bg-red-50 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                            className="cursor-pointer rounded-lg px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50"
                         >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Delete File</span>
+                            Delete
                         </button>
                     )}
                 </div>

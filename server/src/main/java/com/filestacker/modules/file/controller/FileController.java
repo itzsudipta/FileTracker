@@ -8,6 +8,7 @@ import com.filestacker.modules.file.service.FileInfoService;
 import com.filestacker.modules.user.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.hibernate.boot.model.naming.IllegalIdentifierException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -63,6 +64,7 @@ public class FileController {
             HttpServletResponse response
     ) {
         User currentUser = authService.resolveCurrentUser(request, response);
+//        if (file.getName().length() < 30) throw new IllegalIdentifierException("File name too large");
         FileResponse saved = fileInfoService.uploadFile(file, currentUser);
         return ResponseEntity.ok(saved);
     }
